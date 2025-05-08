@@ -1,4 +1,5 @@
 import cv2
+import time
 from hand_tracker import HandTracker
 from gesture_actions import GestureActionHandler
 
@@ -10,6 +11,11 @@ def main():
 
     print("Make a peace sign (✌️) to lock your computer")
     print("Press 'q' to quit")
+
+    # Variables for gesture timing
+    gesture_start_time = None
+    GESTURE_HOLD_TIME = 1.0  # seconds
+    gesture_triggered = False
 
     while True:
         success, frame = cap.read()
@@ -27,16 +33,38 @@ def main():
                 finger_states = tracker.get_finger_state(hand)
                 
                 # Get gesture for this hand
-                gesture = tracker.get_hand_gesture(finger_states)
+                gesture = tracker.get_hand_gesture(finger_states, hand)
                 
-                # Only handle peace sign gesture
+                # Handle peace sign gesture with timing
                 if gesture == "Peace Sign":
-                    action_handler.lock_computer()
+                    current_time = time.time()
+                    
+                    # Start timing if this is the first frame with peace sign
+                    if gesture_start_time is None:
+                        gesture_start_time = current_time
+                        gesture_triggered = False
+                    
+                    # Check if we've held the gesture long enough
+                    elif not gesture_triggered and (current_time - gesture_start_time) >= GESTURE_HOLD_TIME:
+                        action_handler.lock_computer()
+                        gesture_triggered = True
+                else:
+                    # Reset timing if gesture changes
+                    gesture_start_time = None
+                    gesture_triggered = False
                 
-                # Draw gesture text above the hand
+                # Draw gesture text and timer above the hand
                 if boxes and i < len(boxes):
                     x_min, y_min, x_max, y_max = boxes[i]
-                    cv2.putText(frame, gesture, (x_min, y_min - 10),
+                    text = gesture
+                    
+                    # Add timer for peace sign
+                    if gesture == "Peace Sign" and gesture_start_time is not None:
+                        elapsed = time.time() - gesture_start_time
+                        if not gesture_triggered:
+                            text += f" ({elapsed:.1f}s)"
+                    
+                    cv2.putText(frame, text, (x_min, y_min - 10),
                               cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         # Display instructions
