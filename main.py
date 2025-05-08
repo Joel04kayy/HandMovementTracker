@@ -1,10 +1,15 @@
 import cv2
 from hand_tracker import HandTracker
+from gesture_actions import GestureActionHandler
 
 def main():
     # Initialize webcam
     cap = cv2.VideoCapture(0)
     tracker = HandTracker()
+    action_handler = GestureActionHandler()
+
+    print("Make a peace sign (✌️) to lock your computer")
+    print("Press 'q' to quit")
 
     while True:
         success, frame = cap.read()
@@ -23,6 +28,10 @@ def main():
                 
                 # Get gesture for this hand
                 gesture = tracker.get_hand_gesture(finger_states)
+                
+                # Only handle peace sign gesture
+                if gesture == "Peace Sign":
+                    action_handler.lock_computer()
                 
                 # Draw gesture text above the hand
                 if boxes and i < len(boxes):

@@ -104,15 +104,26 @@ class HandTracker:
         def calculate_angle(p1, p2, p3):
             v1 = np.array([p1[0] - p2[0], p1[1] - p2[1]])
             v2 = np.array([p3[0] - p2[0], p3[1] - p2[1]])
-            cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-            angle = np.arccos(np.clip(cos_angle, -1.0, 1.0))
-            return np.degrees(angle)
+            
+            # Calculate norms
+            norm_v1 = np.linalg.norm(v1)
+            norm_v2 = np.linalg.norm(v2)
+            
+            # Check for zero vectors
+            if norm_v1 == 0 or norm_v2 == 0:
+                return 0
+                
+            # Calculate cosine of angle
+            cos_angle = np.dot(v1, v2) / (norm_v1 * norm_v2)
+            # Clamp cos_angle to valid range
+            cos_angle = np.clip(cos_angle, -1.0, 1.0)
+            
+            return np.degrees(np.arccos(cos_angle))
 
         # Check if fingers are up based on angles and positions
         def is_finger_up(tip, pip, mcp, is_thumb=False):
             angle = calculate_angle(tip, pip, mcp)
             if is_thumb:
-                # Thumb has different angle threshold
                 return angle > 150  # Thumb is up when angle is large
             return angle > 160  # Other fingers are up when angle is large
 
@@ -134,16 +145,18 @@ class HandTracker:
 
         thumb, index, middle, ring, pinky = finger_states
 
+        # Peace sign detection (index and middle up, others down)
+        if index and middle and not (ring or pinky or thumb):
+            return "Peace Sign"
+            
         # Count how many fingers are up
         fingers_up = sum(finger_states)
 
-        # Basic gesture recognition with more lenient conditions
+        # Basic gesture recognition
         if fingers_up >= 4:
             return "Open Hand"
         elif fingers_up == 0:
             return "Closed Fist"
-        elif index and middle and not (ring or pinky):
-            return "Peace Sign"
         elif index and not (middle or ring or pinky):
             return "Pointing"
         elif thumb and index and not (middle or ring or pinky):
@@ -169,11 +182,6 @@ class HandTracker:
             elif index and ring:
                 return "Two Fingers"
         elif fingers_up == 3:
-            if index and middle and ring:
-                return "Three Fingers"
-            elif index and middle and pinky:
-                return "Three Fingers"
-            else:
-                return "Three Fingers"
+            return "Three Fingers"
         else:
             return f"Custom Gesture ({fingers_up} fingers up)" 
