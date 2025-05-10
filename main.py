@@ -10,6 +10,7 @@ def main():
     action_handler = GestureActionHandler()
 
     print("Make a peace sign (✌️) to lock your computer")
+    print("Hold index and thumb up to control volume")
     print("Press 'q' to quit")
 
     # Variables for gesture timing
@@ -28,15 +29,22 @@ def main():
         
         # Process each detected hand
         for i, hand in enumerate(hands):
-            if hand:  # If hand landmarks were detected
+            if hand:
                 # Get finger states for this hand
                 finger_states = tracker.get_finger_state(hand)
                 
                 # Get gesture for this hand
                 gesture = tracker.get_hand_gesture(finger_states, hand)
                 
+                # Handle volume control gesture
+                if gesture == "Volume Control":
+                    # Get index finger and thumb positions
+                    index_tip = hand[8]  # Index finger tip
+                    thumb_tip = hand[4]  # Thumb tip
+                    action_handler.control_volume(index_tip, thumb_tip)
+                
                 # Handle peace sign gesture with timing
-                if gesture == "Peace Sign":
+                elif gesture == "Peace Sign":
                     current_time = time.time()
                     
                     # Start timing if this is the first frame with peace sign

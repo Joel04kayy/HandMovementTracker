@@ -172,6 +172,12 @@ class HandTracker:
 
         thumb, index, middle, ring, pinky = finger_states
 
+        # Volume control gesture (only index and thumb up, others down)
+        if index and thumb and not (middle or ring or pinky):
+            # Check if the gesture is held for volume control
+            if self.check_finger_spacing(hand_landmarks[4], hand_landmarks[8]):  # Check spacing between thumb and index
+                return "Volume Control"
+
         # Peace sign detection (index and middle up, others down)
         if index and middle and not (ring or pinky or thumb):
             # Additional check for peace sign
