@@ -11,12 +11,14 @@ def main():
 
     print("Make a peace sign (✌️) to lock your computer")
     print("Hold index and thumb up to control volume")
+    print("Hold thumbs up to unlock")
     print("Press 'q' to quit")
 
     # Variables for gesture timing
     gesture_start_time = None
     GESTURE_HOLD_TIME = 1.0  # seconds
     gesture_triggered = False
+    last_gesture = None
 
     while True:
         success, frame = cap.read()
@@ -42,6 +44,8 @@ def main():
                     index_tip = hand[8]  # Index finger tip
                     thumb_tip = hand[4]  # Thumb tip
                     action_handler.control_volume(index_tip, thumb_tip)
+                    gesture_start_time = None
+                    gesture_triggered = False
                 
                 # Handle peace sign gesture with timing
                 elif gesture == "Peace Sign":
@@ -56,6 +60,20 @@ def main():
                     elif not gesture_triggered and (current_time - gesture_start_time) >= GESTURE_HOLD_TIME:
                         action_handler.lock_computer()
                         gesture_triggered = True
+                
+                # Handle thumbs up gesture with timing
+                elif gesture == "Thumbs Up":
+                    current_time = time.time()
+                    
+                    # Start timing if this is the first frame with thumbs up
+                    if gesture_start_time is None:
+                        gesture_start_time = current_time
+                        gesture_triggered = False
+                    
+                    # Check if we've held the gesture long enough
+                    elif not gesture_triggered and (current_time - gesture_start_time) >= GESTURE_HOLD_TIME:
+                        action_handler.thumbs_up_action()
+                        gesture_triggered = True
                 else:
                     # Reset timing if gesture changes
                     gesture_start_time = None
@@ -66,8 +84,8 @@ def main():
                     x_min, y_min, x_max, y_max = boxes[i]
                     text = gesture
                     
-                    # Add timer for peace sign
-                    if gesture == "Peace Sign" and gesture_start_time is not None:
+                    # Add timer for timed gestures
+                    if gesture in ["Peace Sign", "Thumbs Up"] and gesture_start_time is not None:
                         elapsed = time.time() - gesture_start_time
                         if not gesture_triggered:
                             text += f" ({elapsed:.1f}s)"

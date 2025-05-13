@@ -1,0 +1,9 @@
+# Model files
+yolov3.weights
+*.weights
+*.cfg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class 

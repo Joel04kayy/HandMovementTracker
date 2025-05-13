@@ -22,7 +22,7 @@ class HandTracker:
     def check_finger_spacing(self, tip1, tip2):
         """Check if two fingers are properly spaced"""
         distance = np.linalg.norm(np.array(tip1) - np.array(tip2))
-        return 20 < distance < 100  # Adjust these values based on testing
+        return 10 < distance < 150  # Made more lenient for volume control
 
     def find_hands(self, frame, draw=True):
         # Convert the BGR image to RGB
@@ -175,7 +175,9 @@ class HandTracker:
         # Volume control gesture (only index and thumb up, others down)
         if index and thumb and not (middle or ring or pinky):
             # Check if the gesture is held for volume control
-            if self.check_finger_spacing(hand_landmarks[4], hand_landmarks[8]):  # Check spacing between thumb and index
+            spacing = self.check_finger_spacing(hand_landmarks[4], hand_landmarks[8])  # Check spacing between thumb and index
+            print(f"Volume control check - Thumb: {thumb}, Index: {index}, Spacing: {spacing}")
+            if spacing:
                 return "Volume Control"
 
         # Peace sign detection (index and middle up, others down)
